@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NET-Watch Dashboard v1.0</title>
+    <title>NET-Watch Dashboard v1.1</title>
     <style>
         body {
             background-color: #0d1117;
@@ -18,20 +18,70 @@
             border-radius: 6px;
             margin-top: 15px;
         }
+        .status-line { margin: 10px 0; font-size: 16px; }
         .online { color: #39d353; font-weight: bold; }
         .down { color: #f85149; font-weight: bold; }
+        .checking { color: #8b949e; font-style: italic; }
+        button {
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover { background-color: #30363d; }
     </style>
 </head>
 <body>
 
-    <h1>📡 NET-Watch Dashboard v1.0</h1>
+    <h1>📡 NET-Watch Dashboard v1.1</h1>
     <p>Live Web-Based System Connection Status Engine</p>
+    <button onclick="runRealNetworkCheck()">Test Live Network Connections</button>
 
-    <div class="status-box">
-        <p><span class="online">[ ONLINE ]</span> github.com (Simulated API Check)</p>
-        <p><span class="online">[ ONLINE ]</span> google.com (Simulated API Check)</p>
-        <p><span class="down">[ DOWN ]</span> broken-server-demo.net (Timeout Exception)</p>
+    <div class="status-box" id="dashboard">
+        <!-- Live status results will be injected here automatically -->
     </div>
+
+    <script>
+        // Real websites and public APIs that allow connection checks
+        const targets = [
+            { name: "GitHub API", url: "https://api.github.com" },
+            { name: "Google Data Cache", url: "https://images.google.com/favicon.ico" },
+            { name: "Fake Broken Server", url: "https://this-domain-definitely-does-not-exist-12345.com" }
+        ];
+
+        async function runRealNetworkCheck() {
+            const dashboard = document.getElementById("dashboard");
+            dashboard.innerHTML = ""; // Clear old results
+
+            for (let target of targets) {
+                // 1. Create a placeholder showing it's actively analyzing the network
+                const line = document.createElement("div");
+                line.className = "status-line";
+                line.innerHTML = `<span class="checking">[ CHECKING ]</span> ${target.name}...`;
+                dashboard.appendChild(line);
+
+                const startTime = performance.now();
+
+                try {
+                    // 2. Fire an actual live network fetch request to the server
+                    // mode: 'no-cors' lets us poke the server safely without strict browser blocks
+                    await fetch(target.url, { mode: 'no-cors', cache: 'no-store' });
+                    
+                    const duration = Math.round(performance.now() - startTime);
+                    line.innerHTML = `<span class="online">[ ONLINE ]</span> ${target.name} (${duration}ms response)`;
+                } catch (error) {
+                    // 3. If the connection fails, it catches the real network error here
+                    line.innerHTML = `<span class="down">[ DOWN ]</span> ${target.name} (Connection Failed/Timeout)`;
+                }
+            }
+        }
+
+        // Run automatically when the page first boots up
+        runRealNetworkCheck();
+    </script>
 
 </body>
 </html>
